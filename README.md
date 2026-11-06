@@ -12,7 +12,9 @@ func main() {
     fmt.Println("Hi there!")
 }
 ```
+go run main.go 
 
+# 3_deeper_into_Go
 ## Giải thích cú pháp
 
 ### 1. `package main`
@@ -1993,3 +1995,5 @@ Dấu `*` trước `testing.T` trông khá bí ẩn. Nó gắn liền với cùn
 | `deal(d, n)` thay vì `d.deal(n)` | Tránh hiểu lầm là `deal` sửa đổi bộ bài gốc |
 | `*testing.T` | Dấu `*` còn bí ẩn, sẽ học ở phần sau |
 | Phần tiếp theo | Đi sâu vào chủ đề phức tạp hơn: có sửa đổi dữ liệu gốc hay không |
+
+# 4_organizing_data_with_structs
