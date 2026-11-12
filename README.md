@@ -4,6 +4,39 @@
 -Tự khai báo type
 -Tự khai báo function cho type, mọi biến cùng kiểu đều dùng được
 -Reveiver function (method) là hàm gắn vào 1 kiểu dữ liệu cụ thể => biến hàm thành method của type (giống như Class)
+
+### Bảng so sánh khái niệm: Java vs Python vs Go
+
+| Khái niệm | Java | Python | Go | Giải thích (Go) |
+|---|---|---|---|---|
+| Điểm bắt đầu | <sub>`static void main(String[] a)`</sub> | <sub>`if __name__ == "__main__":`</sub> | <sub>`func main()`</sub> | <sub>• `func`: khai báo hàm<br>• `main`: hàm Go tự gọi khi chạy, phải nằm trong `package main`</sub> |
+| Package | <sub>`package com.app;`</sub> | <sub>file `.py` = module</sub> | <sub>`package cards`</sub> | <sub>• `package`: từ khóa<br>• `cards`: tên package, mọi file cùng thư mục dùng chung tên này</sub> |
+| Import | <sub>`import java.util.List;`</sub> | <sub>`import math`</sub> | <sub>`import "fmt"`</sub> | <sub>• `import`: nạp package<br>• `"fmt"`: đường dẫn package (để trong ngoặc kép)<br>• import mà không dùng → lỗi</sub> |
+| Kiểu dữ liệu | <sub>Tĩnh</sub> | <sub>Động</sub> | <sub>Tĩnh</sub> | <sub>Kiểu được kiểm tra lúc biên dịch, nhưng có thể tự suy luận</sub> |
+| Khai báo biến | <sub>`String c = "Ace";`</sub> | <sub>`c = "Ace"`</sub> | <sub>`var c string = "Ace"`</sub> | <sub>• `var`: khai báo biến<br>• `c`: tên<br>• `string`: kiểu<br>• `= "Ace"`: giá trị khởi tạo</sub> |
+| Khai báo ngắn | <sub>`var c = "Ace";`</sub> | <sub>`c = "Ace"`</sub> | <sub>`c := "Ace"`</sub> | <sub>• `:=`: khai báo + gán, tự suy luận kiểu<br>• chỉ dùng trong hàm, chỉ khi tạo biến mới</sub> |
+| Hằng số | <sub>`final int MAX = 10;`</sub> | <sub>`MAX = 10`</sub> | <sub>`const Max = 10`</sub> | <sub>`const`: giá trị không đổi, xác định lúc biên dịch</sub> |
+| Hàm trả về | <sub>`String f() {...}`</sub> | <sub>`def f() -> str:`</sub> | <sub>`func f() string {...}`</sub> | <sub>• `f`: tên hàm<br>• `()`: tham số<br>• `string`: kiểu trả về, đặt **sau** tên hàm</sub> |
+| Trả về nhiều giá trị | <sub>Không (dùng object)</sub> | <sub>`return a, b`</sub> | <sub>`func f() (int, string)`</sub> | <sub>• `(int, string)`: danh sách kiểu trả về<br>• nhận bằng `n, s := f()`</sub> |
+| Mảng động | <sub>`new ArrayList<>()`</sub> | <sub>`[]`</sub> | <sub>`[]string{}`</sub> | <sub>• `[]`: slice (độ dài thay đổi)<br>• `string`: kiểu phần tử<br>• `{}`: giá trị ban đầu (rỗng)</sub> |
+| Thêm phần tử | <sub>`list.add(x);`</sub> | <sub>`lst.append(x)`</sub> | <sub>`s = append(s, x)`</sub> | <sub>`append` không sửa `s` mà trả về slice mới → phải gán lại vào `s`</sub> |
+| Vòng lặp duyệt | <sub>`for (String c : list)`</sub> | <sub>`for i, c in enumerate(lst):`</sub> | <sub>`for i, c := range s {...}`</sub> | <sub>• `range s`: duyệt slice<br>• `i`: chỉ số<br>• `c`: phần tử<br>• `:=`: tạo mới 2 biến mỗi vòng</sub> |
+| Cắt mảng | <sub>`list.subList(0, 2)`</sub> | <sub>`lst[0:2]`</sub> | <sub>`s[0:2]`</sub> | <sub>• `0`: chỉ số bắt đầu (lấy)<br>• `2`: chỉ số kết thúc (không lấy) → phần tử 0, 1</sub> |
+| Bỏ qua biến | <sub>Không có</sub> | <sub>`_` (quy ước)</sub> | <sub>`for _, c := range s`</sub> | <sub>• `_`: bỏ giá trị không dùng<br>• Go báo lỗi nếu khai báo biến mà không dùng</sub> |
+| Kiểu tùy chỉnh | <sub>`class Deck extends ArrayList<String>`</sub> | <sub>`class Deck(list):`</sub> | <sub>`type deck []string`</sub> | <sub>• `type`: tạo kiểu mới<br>• `deck`: tên kiểu<br>• `[]string`: kiểu gốc mà `deck` dựa trên</sub> |
+| Struct | <sub>`class Card { String suit; }`</sub> | <sub>`@dataclass class Card:`</sub> | <sub>`type card struct { suit string }`</sub> | <sub>• `struct`: nhóm nhiều trường<br>• `suit string`: tên trường + kiểu</sub> |
+| Method | <sub>Viết trong class</sub> | <sub>`def print(self):`</sub> | <sub>`func (d deck) print() {...}`</sub> | <sub>• `(d deck)`: receiver – gắn hàm `print` vào kiểu `deck`<br>• `d` là biến deck đang gọi</sub> |
+| Đối tượng hiện tại | <sub>`this` (ngầm)</sub> | <sub>`self` (tường minh)</sub> | <sub>`d`</sub> | <sub>Tên receiver tự đặt, quy ước 1–2 chữ cái đầu của tên kiểu</sub> |
+| Constructor | <sub>`public Deck() {...}`</sub> | <sub>`def __init__(self):`</sub> | <sub>`func newDeck() deck {...}`</sub> | <sub>• Không có constructor<br>• quy ước dùng hàm thường tên `newXxx` trả về giá trị kiểu đó</sub> |
+| Kế thừa | <sub>`extends`</sub> | <sub>`class B(A):`</sub> | <sub>Không có</sub> | <sub>Dùng composition: nhúng struct này vào struct khác (embedding)</sub> |
+| Interface | <sub>`implements Shape`</sub> | <sub>Duck typing</sub> | <sub>`type Shape interface { Area() float64 }`</sub> | <sub>Kiểu nào có đủ method `Area() float64` là tự động thỏa `Shape`, không cần khai báo</sub> |
+| Public / Private | <sub>`public` / `private`</sub> | <sub>`_name` (quy ước)</sub> | <sub>`Print` / `print`</sub> | <sub>• Chữ cái đầu **hoa** = dùng được từ package khác<br>• **thường** = chỉ trong package</sub> |
+| Xử lý lỗi | <sub>`try {...} catch (E e) {...}`</sub> | <sub>`try: ... except E:`</sub> | <sub>`b, err := os.ReadFile(f)`</sub> | <sub>• Hàm trả về thêm `err`<br>• kiểm tra `if err != nil { ... }` ngay sau khi gọi</sub> |
+| Giá trị rỗng | <sub>`null`</sub> | <sub>`None`</sub> | <sub>`nil`</sub> | <sub>• `nil` cho pointer/slice/map/interface<br>• kiểu khác có zero value: `0`, `""`, `false`</sub> |
+| Con trỏ | <sub>Không</sub> | <sub>Không</sub> | <sub>`p := &x` · `*p`</sub> | <sub>• `&x`: lấy địa chỉ của `x`<br>• `*p`: lấy giá trị tại địa chỉ `p`<br>• `*T`: kiểu con trỏ</sub> |
+| Concurrency | <sub>`new Thread(r).start();`</sub> | <sub>`Thread(target=f).start()`</sub> | <sub>`go work()`</sub> | <sub>• `go`: chạy hàm trong goroutine (luồng nhẹ)<br>• giao tiếp qua `chan`</sub> |
+| Chạy chương trình | <sub>`java Main.java`</sub> | <sub>`python main.py`</sub> | <sub>`go run main.go`</sub> | <sub>• `go run`: biên dịch + chạy ngay<br>• `go build`: chỉ tạo file thực thi</sub> |
+
 ## Hello World trong Go
 
 Nội dung file [main.go](main.go):

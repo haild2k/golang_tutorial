@@ -1,0 +1,14 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug thư mục hiện tại",
+            "type": "go",
+            "request": "launch",
+            "mode": "debug",
+            "program": "${fileDirname}",
+            "cwd": "${fileDirname}",
+            "dlvFlags": ["--check-go-version=false"]
+        }
+    ]
+}
