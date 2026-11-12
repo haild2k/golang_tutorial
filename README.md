@@ -1,4 +1,9 @@
 # Golang tutorial
+## My note
+-Chương trình chính run tại package main 
+-Tự khai báo type
+-Tự khai báo function cho type, mọi biến cùng kiểu đều dùng được
+-Reveiver function (method) là hàm gắn vào 1 kiểu dữ liệu cụ thể => biến hàm thành method của type (giống như Class)
 ## Hello World trong Go
 
 Nội dung file [main.go](main.go):
@@ -1997,3 +2002,1250 @@ Dấu `*` trước `testing.T` trông khá bí ẩn. Nó gắn liền với cùn
 | Phần tiếp theo | Đi sâu vào chủ đề phức tạp hơn: có sửa đổi dữ liệu gốc hay không |
 
 # 4_organizing_data_with_structs
+
+# Struct:
+
+## Structs in Go
+
+### Vấn đề của dự án Cards
+
+Trong dự án Cards, mỗi lá bài là một `string` (ví dụ `"Ace of Spades"`). Nếu mở rộng thành game poker, blackjack..., ta sẽ cần hỏi **lá này chất gì, giá trị bao nhiêu?** Với `string`, phải tách chuỗi theo `" of "` rồi lấy ra giá trị và chất: làm được nhưng **rất khó xử** và gắn chặt chương trình vào việc "lá bài là chuỗi".
+
+### Struct là gì?
+
+**Struct** (viết tắt của *structure*) là một cấu trúc dữ liệu gom **nhiều thuộc tính có liên quan** lại với nhau.
+
+```go
+type card struct {
+    suit  string // "Spades"
+    value string // "Ace"
+}
+```
+
+Mỗi giá trị kiểu `card` có `suit` và `value` riêng, truy cập trực tiếp mà không cần thao tác chuỗi.
+
+### So sánh với ngôn ngữ khác
+
+Ở mức khái quát (không hoàn toàn chính xác), struct giống:
+
+| Ngôn ngữ | Tương đương |
+|---|---|
+| JavaScript | Object đơn giản |
+| Ruby | Hash |
+| Python | Dictionary |
+
+### Chuẩn bị dự án
+
+Tạo thư mục mới `structs` và file `main.go` bên trong để thử nghiệm struct qua vài ví dụ nhỏ.
+
+### Tóm tắt
+
+| Khái niệm | Ý nghĩa |
+|---|---|
+| Lá bài là `string` | Muốn lấy chất/giá trị phải tách chuỗi, khó mở rộng |
+| Struct | Gom các thuộc tính liên quan thành một kiểu dữ liệu |
+| `card{suit, value}` | Cách biểu diễn lá bài tốt hơn |
+| Phần tiếp theo | Viết code ví dụ với struct trong `structs/main.go` |
+
+## Defining Structs
+
+Tạo struct gồm 2 bước: **(1) định nghĩa** các trường và kiểu của chúng, **(2) tạo giá trị** theo định nghĩa đó (tạo bao nhiêu cũng được).
+
+```go
+package main
+
+type person struct {
+    firstName string
+    lastName  string
+}
+
+func main() {}
+```
+
+- Cú pháp giống `type deck []string`: khai báo **kiểu tùy chỉnh mới** `person`.
+- Các trường **không ngăn cách** bằng dấu phẩy/chấm phẩy: chỉ `tên kiểu` trên mỗi dòng.
+
+## Declaring Structs
+
+### Cách 1: theo thứ tự trường (không khuyến khích)
+
+```go
+alex := person{"Alex", "Anderson"}
+```
+
+Go gán theo **thứ tự định nghĩa** trường. Nếu sau này đổi thứ tự `firstName`/`lastName` thì dữ liệu bị gán sai mà không báo lỗi.
+
+### Cách 2: chỉ rõ tên trường (khuyến khích)
+
+```go
+alex := person{firstName: "Alex", lastName: "Anderson"}
+fmt.Println(alex) // {Alex Anderson}
+```
+
+Không phụ thuộc thứ tự trường, an toàn khi thêm/đổi trường.
+
+## Updating Struct Values
+
+### Cách 3: `var` và zero value
+
+```go
+var alex person
+fmt.Println(alex)         // { }
+fmt.Printf("%+v", alex)   // {firstName: lastName:}
+```
+
+Khi không gán giá trị, Go dùng **zero value** cho từng trường (không phải `nil`/`undefined` như JS, Ruby):
+
+| Kiểu | Zero value |
+|---|---|
+| `string` | `""` |
+| `int`, `float64` | `0` |
+| `bool` | `false` |
+
+`%+v` in ra **cả tên trường lẫn giá trị**.
+
+### Cập nhật trường bằng dấu chấm
+
+```go
+alex.firstName = "Alex"
+alex.lastName = "Anderson"
+```
+
+## Embedding Structs
+
+Một struct có thể chứa **struct khác** làm trường (không chỉ kiểu cơ bản):
+
+```go
+type contactInfo struct {
+    email   string
+    zipCode int
+}
+
+type person struct {
+    firstName string
+    lastName  string
+    contact   contactInfo
+}
+
+jim := person{
+    firstName: "Jim",
+    lastName:  "Party",
+    contact: contactInfo{
+        email:   "jim@gmail.com",
+        zipCode: 94000,
+    },
+}
+fmt.Printf("%+v", jim)
+```
+
+> Khai báo nhiều dòng: **mỗi dòng phải có dấu phẩy, kể cả dòng cuối** (dễ quên nếu quen JS/Ruby).
+
+`contactInfo` vẫn dùng độc lập được, hoặc nhúng vào struct khác (ví dụ `business`).
+
+## Structs with Receiver Functions
+
+### Nhúng không cần tên trường
+
+```go
+type person struct {
+    firstName string
+    lastName  string
+    contactInfo // tương đương: contactInfo contactInfo
+}
+
+jim := person{
+    // ...
+    contactInfo: contactInfo{ /* ... */ },
+}
+```
+
+Chỉ ghi kiểu thì tên trường **tự lấy theo tên kiểu**. Điều này sẽ quan trọng khi nói về tái sử dụng code sau này.
+
+### Receiver với struct
+
+```go
+func (p person) print() {
+    fmt.Printf("%+v", p)
+}
+
+func (p person) updateName(newFirstName string) {
+    p.firstName = newFirstName
+}
+
+jim.updateName("Jimmy")
+jim.print() // firstName vẫn là Jim!
+```
+
+Không lỗi, nhưng **tên không được cập nhật**. Lý do nằm ở chủ đề tiếp theo: con trỏ (pointer).
+
+## Pass By Value
+
+**RAM** có thể hình dung như dãy ô nhớ, mỗi ô có **địa chỉ** và chứa dữ liệu. `jim` trỏ đến ô chứa struct, ví dụ địa chỉ `0001`.
+
+Go là ngôn ngữ **truyền theo giá trị (pass by value)**: khi truyền giá trị vào hàm (kể cả receiver), Go **sao chép** dữ liệu sang ô nhớ mới, hàm làm việc với **bản sao**.
+
+| Địa chỉ | Giá trị |
+|---|---|
+| `0001` | `person{firstName: "Jim"...}` ← `jim` |
+| `0002` | bản sao `person{...}` ← `p` trong `updateName` |
+
+→ `p.firstName = ...` chỉ sửa bản sao, `jim` gốc không đổi.
+
+## Structs with Pointers
+
+Sửa code để cập nhật được bản gốc:
+
+```go
+jimPointer := &jim
+jimPointer.updateName("Jimmy")
+jim.print() // firstName: Jimmy
+
+func (pointerToPerson *person) updateName(newFirstName string) {
+    (*pointerToPerson).firstName = newFirstName
+}
+```
+
+## Pointer Operations
+
+| Toán tử | Ý nghĩa |
+|---|---|
+| `&value` | Lấy **địa chỉ bộ nhớ** của giá trị (tạo con trỏ) |
+| `*pointer` | Lấy **giá trị** tại địa chỉ mà con trỏ trỏ tới |
+
+- `jimPointer := &jim`: `jimPointer` chứa địa chỉ (ví dụ `0xc000010200`), không phải struct.
+- `(*pointerToPerson)`: biến địa chỉ trở lại thành struct `jim` thật, nên sửa trường là sửa bản gốc.
+
+### `*` trước kiểu vs `*` trước con trỏ (dễ nhầm nhất)
+
+| Vị trí | Ví dụ | Ý nghĩa |
+|---|---|---|
+| Trước **kiểu** | `*person` | **Mô tả kiểu**: con trỏ tới `person` (không phải toán tử) |
+| Trước **biến con trỏ** | `*pointerToPerson` | **Toán tử**: lấy giá trị tại địa chỉ |
+
+### Quy tắc cần nhớ
+
+- Có **địa chỉ** → thành giá trị bằng `*address`.
+- Có **giá trị** → thành địa chỉ bằng `&value`.
+
+## Pointer Shortcut
+
+Nếu receiver là kiểu con trỏ (`*person`), Go cho phép gọi trực tiếp trên **giá trị** hoặc **con trỏ**, tự động lấy địa chỉ:
+
+```go
+jim.updateName("Jimmy") // Go tự hiểu là (&jim).updateName("Jimmy")
+```
+
+Không cần bước `jimPointer := &jim`. Cách viết này rất phổ biến trong code Go thực tế.
+
+### Tóm tắt
+
+| Khái niệm | Ý nghĩa |
+|---|---|
+| `type person struct {...}` | Định nghĩa struct, trường không có dấu phẩy |
+| `person{firstName: "..."}` | Tạo struct, nên ghi rõ tên trường |
+| `var p person` | Struct với zero value (`""`, `0`, `false`) |
+| `%+v` | In struct kèm tên trường |
+| Struct lồng nhau | Trường có kiểu là struct khác; dòng cuối vẫn cần dấu phẩy |
+| Pass by value | Truyền vào hàm là truyền **bản sao** |
+| `&` / `*` | Lấy địa chỉ / lấy giá trị tại địa chỉ |
+| Receiver `*person` | Cho phép hàm sửa struct gốc |
+
+# Map
+
+## Maps
+
+**Map** là tập hợp các cặp **key–value**, tương tự `hash` trong Ruby, object trong JavaScript hay `dict` trong Python.
+
+- Mọi **key** phải **cùng một kiểu**, mọi **value** cũng phải **cùng một kiểu**.
+- Kiểu của key và kiểu của value **không bắt buộc giống nhau** (ví dụ `map[string]int`).
+
+### Khai báo bằng literal
+
+```go
+colors := map[string]string{
+	"red":   "#ff0000",
+	"green": "#4bf745",
+}
+fmt.Println(colors) // map[green:#4bf745 red:#ff0000]
+```
+
+| Phần | Ý nghĩa |
+|---|---|
+| `map[string]` | Kiểu của key là `string` |
+| `string` (sau `]`) | Kiểu của value là `string` |
+| `"red": "#ff0000",` | Một cặp key–value; **mỗi cặp đều phải có dấu phẩy**, kể cả cặp cuối |
+
+## Manipulating Maps
+
+### Ba cách tạo map
+
+```go
+colors := map[string]string{"red": "#ff0000"} // 1. literal, có sẵn giá trị
+var colors map[string]string                  // 2. var → zero value
+colors := make(map[string]string)             // 3. hàm có sẵn make → map rỗng
+```
+
+- Zero value của map in ra là `map[]` (rỗng).
+- **Lưu ý:** map khai báo bằng `var` thực chất là **`nil` map**: đọc thì được, nhưng **gán key mới sẽ panic** (`assignment to entry in nil map`). Muốn thêm phần tử sau này thì dùng `make` hoặc literal.
+
+### Thêm / sửa phần tử: cú pháp `[]`
+
+```go
+colors := make(map[string]string)
+colors["white"] = "#ffffff"
+```
+
+- Map **không dùng dấu chấm** như struct (`colors.white` là sai), vì key có kiểu, không phải tên trường. Ví dụ với `map[int]string` thì viết `colors[10] = "#ffffff"`.
+
+### Xóa phần tử: `delete`
+
+```go
+delete(colors, 10) // delete(tênMap, key)
+```
+
+## Iterating Over Maps
+
+Duyệt map bằng `for ... range`, giống slice nhưng nhận về **key và value** thay vì index và value:
+
+```go
+func printMap(c map[string]string) {
+	for color, hex := range c {
+		fmt.Println("Hex code for", color, "is", hex)
+	}
+}
+
+func main() {
+	colors := map[string]string{
+		"red":   "#ff0000",
+		"green": "#4bf745",
+		"white": "#ffffff",
+	}
+	printMap(colors)
+}
+```
+
+- Truyền map vào hàm: khai báo đối số dạng `c map[string]string`.
+- `color, hex` là biến mới mỗi vòng lặp nên dùng `:=`.
+- Thứ tự duyệt map **không cố định**, mỗi lần chạy có thể khác.
+
+## Differences Between Maps and Structs
+
+| | Map | Struct |
+|---|---|---|
+| Kiểu key | Mọi key cùng một kiểu | Không có "kiểu key", tên trường cố định |
+| Kiểu value | Mọi value cùng một kiểu | Mỗi trường có thể khác kiểu |
+| Truy cập | `m["key"]` | `s.field` |
+| Duyệt qua (iterate) | Được, key được đánh chỉ mục | Không duyệt được các trường |
+| Tập key | **Không cần biết** lúc biên dịch, thêm/xóa tùy ý | Phải khai báo **hết** lúc biên dịch |
+| Bản chất | **Reference type**: truyền vào hàm, sửa map trong hàm thì map gốc cũng đổi | **Value type**: truyền vào hàm là bản sao |
+| Dùng khi | Biểu diễn **tập các giá trị liên quan chặt chẽ** cùng loại (ví dụ tên màu → mã hex) | Biểu diễn **một "thứ"** có nhiều thuộc tính khác nhau (ví dụ `person`) |
+
+- Nếu không biết trước tập key sẽ gồm những gì → nghĩ tới **map**.
+- Nếu tập key cố định và biết trước (luôn chỉ có `red`, `green`, `white`) → cân nhắc **struct**.
+- Trong code Go thực tế, **struct được dùng nhiều hơn map**, nhưng còn tùy loại ứng dụng.
+
+### Tóm tắt
+
+| Cú pháp | Ý nghĩa |
+|---|---|
+| `map[K]V{k: v,}` | Tạo map bằng literal |
+| `make(map[K]V)` | Tạo map rỗng, dùng được ngay |
+| `var m map[K]V` | `nil` map, không gán được phần tử |
+| `m[k] = v` | Thêm hoặc sửa phần tử |
+| `delete(m, k)` | Xóa phần tử theo key |
+| `for k, v := range m { }` | Duyệt qua mọi cặp key–value |
+
+# Interface
+
+## Purpose of Interfaces
+
+Hai điều đã biết:
+
+- Mọi giá trị trong Go đều **có kiểu**, kể cả khi dùng `:=` để Go tự suy ra.
+- Mọi hàm đều phải **chỉ rõ kiểu** của đối số hoặc receiver.
+
+**Vấn đề:** hàm `shuffle` trong dự án Cards gắn với kiểu `deck`, nhưng logic bên trong không quan tâm đó là bộ bài, `[]string`, `[]int` hay `[]float64`. Nếu mỗi kiểu phải viết một `shuffle` riêng thì code sẽ bị **lặp lại** rất nhiều, dù logic giống hệt nhau.
+
+→ **Interface** giúp **tái sử dụng code** cho nhiều kiểu khác nhau.
+
+### Chương trình mẫu: hai chat bot
+
+| | `englishBot` | `spanishBot` |
+|---|---|---|
+| `getGreeting() string` | Logic **riêng** cho tiếng Anh, trả về `"Hi There!"` | Logic **riêng** cho tiếng Tây Ban Nha, trả về `"Hola!"` |
+| `printGreeting(...)` | `fmt.Println(eb.getGreeting())` | `fmt.Println(sb.getGreeting())` |
+
+- `getGreeting`: cách cài đặt **khác nhau** cho từng bot.
+- `printGreeting`: logic **giống hệt nhau**, chỉ khác kiểu đối số → nên dùng chung một hàm.
+
+## Problems Without Interfaces
+
+Cách viết "ngây thơ", chưa dùng interface:
+
+```go
+type englishBot struct{} // struct không có trường
+type spanishBot struct{}
+
+func main() {
+	eb := englishBot{}
+	sb := spanishBot{}
+
+	printGreeting(eb)
+	printGreeting(sb)
+}
+
+func (englishBot) getGreeting() string {
+	// logic rất riêng để tạo lời chào tiếng Anh
+	return "Hi There!"
+}
+
+func (spanishBot) getGreeting() string {
+	return "Hola!"
+}
+
+func printGreeting(eb englishBot) { fmt.Println(eb.getGreeting()) }
+func printGreeting(sb spanishBot) { fmt.Println(sb.getGreeting()) } // lỗi: printGreeting redeclared
+```
+
+- `englishBot{}`: tạo giá trị của struct không có trường.
+- Nếu receiver **không dùng** trong thân hàm, có thể **bỏ tên biến**, chỉ giữ kiểu: `func (englishBot) getGreeting()`.
+- **Go không hỗ trợ overloading** (khác Java, C#): không thể khai báo hai hàm cùng tên dù kiểu đối số khác nhau.
+
+## Interfaces in Practice
+
+Refactor: xóa hai hàm `printGreeting`, thêm interface `bot` và một `printGreeting` duy nhất.
+
+```go
+type bot interface {
+	getGreeting() string
+}
+
+type englishBot struct{}
+type spanishBot struct{}
+
+func main() {
+	eb := englishBot{}
+	sb := spanishBot{}
+
+	printGreeting(eb)
+	printGreeting(sb)
+}
+
+func printGreeting(b bot) {
+	fmt.Println(b.getGreeting())
+}
+
+func (englishBot) getGreeting() string { return "Hi There!" }
+func (spanishBot) getGreeting() string { return "Hola!" }
+```
+
+Chạy `go run main.go`:
+
+```
+Hi There!
+Hola!
+```
+
+### Interface hoạt động thế nào?
+
+`type bot interface { getGreeting() string }` có thể hiểu là:
+
+> "Mọi kiểu trong chương trình có hàm `getGreeting()` trả về `string` thì **cũng được coi là kiểu `bot`**."
+
+- `englishBot` và `spanishBot` đều có `getGreeting() string` → **tự động** trở thành `bot` (không cần khai báo `implements` như Java).
+- `printGreeting(b bot)` nhận bất kỳ giá trị nào thỏa interface `bot` → truyền được cả `eb` lẫn `sb`.
+- Thêm bot mới (Pháp, Ý, ...) chỉ cần cài `getGreeting() string`, không phải viết lại `printGreeting`.
+
+## Rules of Interfaces
+
+### Cú pháp đầy đủ
+
+```go
+type bot interface {
+	getGreeting(string, int) (string, error)
+	getBotVersion() float64
+	respondToUser(user) string
+}
+```
+
+| Phần | Ý nghĩa |
+|---|---|
+| `type bot interface` | Khai báo kiểu interface mới tên `bot` |
+| `getGreeting` | Tên hàm mà kiểu khác phải có |
+| `(string, int)` | **Kiểu đối số** (chỉ ghi kiểu, không ghi tên biến) |
+| `(string, error)` | **Kiểu trả về**, có thể nhiều giá trị |
+| Nhiều dòng | Kiểu khác phải có **đủ tất cả** các hàm mới được coi là `bot` |
+
+- Trong interface, mỗi dòng là `tênHàm(kiểuĐốiSố) kiểuTrảVề`: không có dấu phẩy cuối dòng, không có dấu `:`.
+
+### Concrete type vs Interface type
+
+| | Concrete type | Interface type |
+|---|---|---|
+| Ví dụ | `map`, `struct`, `int`, `string`, `englishBot` | `bot` |
+| Tạo giá trị trực tiếp? | **Được** | **Không** |
+| Vai trò | Chứa dữ liệu và cách cài đặt cụ thể | Mô tả tập hàm mà một kiểu phải có |
+
+### Tóm tắt
+
+| Khái niệm | Ý nghĩa |
+|---|---|
+| Interface | Mô tả **tập hàm** (tên, kiểu đối số, kiểu trả về) |
+| Thỏa interface | Kiểu nào có đủ các hàm đó thì **tự động** thuộc kiểu interface |
+| Lợi ích | Viết một hàm nhận interface, dùng lại cho nhiều concrete type |
+| Overloading | Go **không** hỗ trợ, dùng interface thay thế |
+| Receiver không dùng | Có thể bỏ tên: `func (englishBot) getGreeting()` |
+
+## Extra Interface Notes
+
+| Lưu ý | Ý nghĩa |
+|---|---|
+| Interface **không phải generic type** | Không dùng interface để viết code "nhận mọi kiểu rồi tự xử lý" như generic trong Java/C#. Interface chỉ là công cụ giúp code gọn và ít lặp hơn. |
+| Interface là **ngầm định (implicit)** | Không cần viết `englishBot implements bot`. Kiểu nào có đủ hàm thì Go tự coi là thỏa interface. |
+| Interface là **hợp đồng (contract)** về kiểu | Chỉ kiểm tra **tên hàm, kiểu đối số, kiểu trả về**, không kiểm tra **logic** bên trong. |
+| Interface **khó** | Bước 1 là **đọc hiểu** interface trong tài liệu thư viện chuẩn. Tự viết interface riêng để sau. |
+
+> **Ghi chú:** khóa học được quay khi Go chưa có generics. Từ **Go 1.18** Go đã hỗ trợ generics (`func F[T any](x T)`), nhưng ý chính vẫn đúng: interface và generics là hai công cụ khác nhau.
+
+### Implicit: vừa tiện vừa khó theo dõi
+
+- **Tiện:** không cần viết boilerplate để liên kết `englishBot`, `spanishBot` với `bot`.
+- **Khó:** nhìn vào một kiểu, khó biết ngay nó thỏa những interface nào. Viết sai kiểu trả về thì chỉ biết khi **compile báo lỗi**.
+
+### Garbage in, garbage out
+
+```go
+func (englishBot) getGreeting() string {
+	return "asdfghjkl" // vẫn là string → vẫn thỏa interface bot
+}
+```
+
+- Code trên **vẫn compile được** vì vẫn trả về `string`, nhưng kết quả sai so với mong muốn (một lời chào).
+- Interface giúp tái sử dụng code, **không** phải là bài test tự động, **không** ngăn được lỗi logic.
+
+## The HTTP Package
+
+Mục tiêu: viết chương trình gửi HTTP request tới `google.com` rồi in nội dung phản hồi (HTML) ra terminal.
+
+Tạo thư mục mới `http`, file `main.go`. Tra tài liệu tại [pkg.go.dev/net/http](https://pkg.go.dev/net/http):
+
+```go
+func Get(url string) (resp *Response, err error)
+```
+
+- `http.Get` nhận URL, trả về **con trỏ** tới `Response` và một `error` (chỉ khác `nil` khi có lỗi).
+
+```go
+package main
+
+import (
+	"fmt"
+	"net/http"
+	"os"
+)
+
+func main() {
+	resp, err := http.Get("http://google.com")
+	if err != nil {
+		fmt.Println("Error:", err)
+		os.Exit(1)
+	}
+
+	fmt.Println(resp) // cách "ngây thơ"
+}
+```
+
+- URL phải ghi đầy đủ `http://`, không được chỉ ghi `google.com`.
+- Kết quả `go run main.go`: in ra `200 OK`, `HTTP/1.1`, headers, ... nhưng **không thấy HTML** của trang. Khác với Ruby/JS/Python, in thẳng `resp` không cho ra nội dung body.
+
+## Response Struct
+
+`http.Response` là một **struct**:
+
+```go
+type Response struct {
+	Status     string // "200 OK"
+	StatusCode int    // 200
+	Proto      string // "HTTP/1.0"
+	// ...
+	Body io.ReadCloser
+	// ...
+}
+```
+
+- 3 field đầu khớp với `200 OK 200 HTTP/1.1` thấy trên terminal.
+- Nội dung HTML nằm trong field **`Body`**, nhưng kiểu của nó là `io.ReadCloser`, một **interface**, chứ không phải `string`.
+
+Lần theo tài liệu:
+
+```go
+type ReadCloser interface {
+	Reader
+	Closer
+}
+
+type Reader interface {
+	Read(p []byte) (n int, err error)
+}
+
+type Closer interface {
+	Close() error
+}
+```
+
+```
+Response (struct)
+ └── Body: io.ReadCloser (interface)
+       ├── Reader (interface) → Read([]byte) (int, error)
+       └── Closer (interface) → Close() error
+```
+
+## More Interface Syntax
+
+### Interface làm kiểu của field trong struct
+
+```go
+type Response struct {
+	Body io.ReadCloser
+}
+```
+
+- Nghĩa là: field `Body` có thể gán **bất kỳ giá trị nào** miễn kiểu của nó thỏa interface `ReadCloser`.
+- Ta có thể tự tạo một struct có hàm `Read` và `Close` đúng chữ ký, rồi gán nó vào `Body`. Interface ở đây mang lại sự **linh hoạt**.
+
+### Nhúng (embed) interface vào interface
+
+```go
+type ReadCloser interface {
+	Reader
+	Closer
+}
+```
+
+- Không liệt kê hàm, mà liệt kê **tên interface khác**: ghép nhiều interface thành một interface mới.
+- Muốn thỏa `ReadCloser` thì phải thỏa **cả** `Reader` **và** `Closer`, tức là có đủ `Read(...)` và `Close()`.
+
+## Interface Review
+
+Nhắc lại ví dụ bot:
+
+- `englishBot`, `spanishBot` đều có `getGreeting() string`.
+- Interface `bot` nói: kiểu nào có `getGreeting() string` thì cũng là `bot`.
+- Nhờ đó chỉ cần **một** hàm `printGreeting(b bot)` dùng chung cho cả hai.
+
+> Lợi ích cốt lõi của interface: **tái sử dụng code**. Với `io.Reader`, lợi ích này lúc đầu chưa thấy rõ, phần dưới giải thích.
+
+## The Reader Interface
+
+### Vấn đề nếu không có interface (thế giới giả tưởng)
+
+Chương trình có thể nhận dữ liệu từ nhiều nguồn, mỗi nguồn trả về một kiểu khác nhau:
+
+| Nguồn input | Kiểu giả tưởng |
+|---|---|
+| HTTP request body | `[]flargen` |
+| File text trên ổ cứng | `[]string` |
+| Ảnh | `jpegne` |
+| User gõ ở command line | `[]byte` |
+| Cảm biến analog | `[]float` |
+
+→ Mỗi kiểu lại phải viết một hàm xử lý riêng (`printHTTP`, `printFile`, `printImage`, ...), dù logic bên trong **giống nhau**. Đây chính là vấn đề đã gặp với `printGreeting` ở ví dụ bot.
+
+### Giải pháp: `io.Reader`
+
+```
+HTTP body ──┐
+Text file ──┤
+Image ──────┼──► io.Reader ──► []byte ──► các hàm dùng chung
+Terminal ───┤
+Sensor ─────┘
+```
+
+```go
+type Reader interface {
+	Read(p []byte) (n int, err error)
+}
+```
+
+- Mọi nguồn input chỉ cần cài đặt `Reader` là có một **điểm tiếp xúc chung**.
+- Đầu ra chung là **`[]byte`** (có thể coi như một chuỗi).
+- Viết hàm làm việc với `io.Reader` / `[]byte` **một lần**, dùng được cho **mọi** nguồn input.
+- `io.Reader` xuất hiện ở khắp nơi trong thư viện chuẩn của Go.
+
+### Tóm tắt
+
+| Khái niệm | Ý nghĩa |
+|---|---|
+| `http.Get(url)` | Trả về `*http.Response` và `error` |
+| `resp.Body` | Kiểu `io.ReadCloser` (interface), chứa nội dung phản hồi |
+| Interface trong struct | Field nhận bất kỳ giá trị nào thỏa interface đó |
+| Embed interface | `ReadCloser` = `Reader` + `Closer` |
+| `io.Reader` | "Bộ chuyển đổi" đưa mọi nguồn input về `[]byte` chung |
+| Interface là contract | Kiểm tra chữ ký hàm, không kiểm tra logic |
+
+## More on the Reader Interface
+
+Mọi nguồn input đưa vào chương trình đều cài đặt `Reader`, ví dụ `resp.Body`. Phần việc của ta chỉ là **dùng** `Reader` để lấy dữ liệu ra, không phải tự viết hàm `Read`.
+
+### Hàm `Read` thực sự làm gì?
+
+```go
+Read(p []byte) (n int, err error)
+```
+
+```
+Code của ta                              resp.Body (cài đặt Reader)
+┌──────────────────┐   truyền []byte     ┌──────────────────────────┐
+│ tạo []byte rỗng  │ ──────────────────► │ Read(p []byte)           │
+│                  │                     │ lấy dữ liệu thô (HTML)   │
+│ []byte giờ có    │ ◄────────────────── │ ghi vào p                │
+│ dữ liệu          │   n, err            └──────────────────────────┘
+└──────────────────┘
+```
+
+- **Ngược với trực giác:** ở nhiều ngôn ngữ, `read()` **trả về** dữ liệu. Ở Go, ta **truyền vào** một `[]byte`, còn `Read` **ghi** dữ liệu vào đó.
+- Làm được vì slice là kiểu tham chiếu: hàm sửa phần tử trong slice thì slice bên ngoài cũng thấy thay đổi (xem phần Pass By Value / Pointers).
+- Giá trị trả về **không phải dữ liệu**, chỉ là thông tin về lần đọc:
+
+| Giá trị trả về | Ý nghĩa |
+|---|---|
+| `n int` | Số byte đã đọc vào `p` |
+| `err error` | Lỗi nếu có (hết dữ liệu thì là `io.EOF`) |
+
+## Working with the Read Function
+
+```go
+func main() {
+	resp, err := http.Get("http://google.com")
+	if err != nil {
+		fmt.Println("Error:", err)
+		os.Exit(1)
+	}
+
+	bs := make([]byte, 99999)
+	resp.Body.Read(bs)
+	fmt.Println(string(bs))
+}
+```
+
+### `make([]byte, 99999)`
+
+- `make` là hàm có sẵn của Go: tham số 1 là **kiểu slice**, tham số 2 là **số phần tử** khởi tạo sẵn (đều là giá trị 0).
+- Khác cú pháp cũ `[]byte{...}` (liệt kê phần tử).
+- **Tại sao cần 99999 phần tử?** `Read` **không tự mở rộng** slice. Nó chỉ đọc cho tới khi slice đầy. Slice rỗng (`len = 0`) thì `Read` coi như đã đầy và dừng ngay.
+- 99999 là con số "đoán chừng đủ lớn" để chứa toàn bộ HTML.
+
+### Kết quả
+
+- `string(bs)` chuyển `[]byte` thành `string` để in.
+- `go run main.go` in ra toàn bộ HTML của trang Google (`<!doctype html><html>...`).
+
+> **Lưu ý thực tế:** một lần gọi `Read` có thể **không đọc hết** dữ liệu. Code thật thường dùng `io.ReadAll(resp.Body)` hoặc `io.Copy` (phần dưới), và nhớ `defer resp.Body.Close()`.
+
+## The Writer Interface
+
+Rút gọn đoạn code trên thành **một dòng**:
+
+```go
+io.Copy(os.Stdout, resp.Body)
+```
+
+Kết quả y hệt: in toàn bộ HTML ra terminal. Để hiểu dòng này, cần biết interface **`Writer`**, là chiều **ngược lại** của `Reader`:
+
+```
+                Reader                              Writer
+Nguồn bên ngoài ──────► []byte (trong chương trình) ──────► Đích bên ngoài
+(HTTP body, file,                                          (HTTP request đi, file,
+ ảnh, terminal...)                                          ảnh, terminal...)
+```
+
+| Interface | Hướng dữ liệu |
+|---|---|
+| `Reader` | Từ **ngoài vào** chương trình, thành `[]byte` |
+| `Writer` | Từ `[]byte` trong chương trình **ra ngoài** |
+
+Muốn xuất dữ liệu ra đâu đó, ta tìm trong thư viện chuẩn một giá trị cài đặt `Writer` rồi dùng nó.
+
+## The io.Copy Function
+
+### `io.Writer`
+
+```go
+type Writer interface {
+	Write(p []byte) (n int, err error)
+}
+```
+
+- Chữ ký giống `Read`, nhưng lần này `p` là **dữ liệu đầu vào**: `Write` lấy dữ liệu trong `p` và gửi ra một kênh output.
+
+### `io.Copy`
+
+```go
+func Copy(dst Writer, src Reader) (written int64, err error)
+```
+
+| Tham số | Kiểu | Trong ví dụ |
+|---|---|---|
+| `dst` | thứ cài đặt `Writer` | `os.Stdout` |
+| `src` | thứ cài đặt `Reader` | `resp.Body` |
+
+- `os.Stdout` là một **biến** do package `os` export, có kiểu `*os.File`.
+- `*os.File` có hàm `Write([]byte) (int, error)`, nên **thỏa** interface `Writer` và truyền được làm tham số đầu của `io.Copy`.
+- `io.Copy` = lấy dữ liệu từ `Reader`, chuyển sang `Writer`.
+
+## The Implementation of io.Copy
+
+Trong VS Code, giữ **Cmd** (macOS) / **Ctrl** (Windows) rồi click vào `Copy` để xem mã nguồn:
+
+```go
+func Copy(dst Writer, src Reader) (written int64, err error) {
+	return copyBuffer(dst, src, nil)
+}
+
+func copyBuffer(dst Writer, src Reader, buf []byte) (written int64, err error) {
+	// ...
+	if buf == nil {
+		size := 32 * 1024
+		// ...
+		buf = make([]byte, size) // giống bs := make([]byte, 99999)
+	}
+	for {
+		nr, er := src.Read(buf) // Reader ghi dữ liệu vào buf
+		if nr > 0 {
+			nw, ew := dst.Write(buf[0:nr]) // đẩy dữ liệu trong buf sang Writer
+			// ... cộng dồn written, kiểm tra lỗi
+		}
+		if er != nil {
+			if er != EOF {
+				err = er
+			}
+			break
+		}
+	}
+	return written, err
+}
+```
+
+- Tạo buffer `[]byte` cỡ **32 KB**.
+- **Vòng lặp:** `src.Read(buf)` đọc một phần dữ liệu vào buffer, rồi `dst.Write(buf[:nr])` ghi phần đó ra đích. Lặp đến khi gặp `EOF`.
+- Nhờ vòng lặp, `io.Copy` đọc được **toàn bộ** dữ liệu mà không cần đoán kích thước như `make([]byte, 99999)`.
+
+```
+src (Reader) ──Read──► buf []byte (32KB) ──Write──► dst (Writer)
+     ▲                                                  │
+     └──────────────── lặp đến EOF ─────────────────────┘
+```
+
+## A Custom Writer
+
+Tự tạo kiểu cài đặt `Writer` rồi truyền vào `io.Copy`:
+
+```go
+type logWriter struct{}
+
+func main() {
+	resp, err := http.Get("http://google.com")
+	if err != nil {
+		fmt.Println("Error:", err)
+		os.Exit(1)
+	}
+
+	lw := logWriter{}
+	io.Copy(lw, resp.Body)
+}
+
+func (logWriter) Write(bs []byte) (int, error) {
+	fmt.Println(string(bs))
+	fmt.Println("Just wrote this many bytes:", len(bs))
+	return len(bs), nil
+}
+```
+
+- `logWriter` có `Write([]byte) (int, error)` nên **tự động** thỏa `io.Writer` (implicit).
+- Theo tài liệu, `n` phải là **số byte đã xử lý** trong `p`. Ở đây xử lý hết nên trả về `len(bs)`, lỗi là `nil`.
+- Kết quả: in HTML, sau đó là dòng `Just wrote this many bytes: 10403` (con số tùy lần chạy).
+
+### Garbage in, garbage out (lần nữa)
+
+```go
+func (logWriter) Write(bs []byte) (int, error) {
+	return 1, nil // đúng chữ ký, sai logic
+}
+```
+
+- Vẫn **compile và chạy được**, nhưng **không in ra gì cả**.
+- Interface chỉ đảm bảo **đúng kiểu**, không đảm bảo **đúng hành vi**. Phải đọc tài liệu để cài đặt đúng.
+
+### Tóm tắt
+
+| Khái niệm | Ý nghĩa |
+|---|---|
+| `Read(p []byte)` | Ghi dữ liệu **vào** `p`, trả về số byte đọc được và lỗi |
+| `make([]byte, n)` | Tạo slice có sẵn `n` phần tử. `Read` không tự mở rộng slice |
+| `io.Writer` | `Write(p []byte) (int, error)`: đưa dữ liệu trong `p` **ra ngoài** |
+| `io.Copy(dst, src)` | Lặp `Read` từ `src` rồi `Write` sang `dst` qua buffer 32 KB |
+| `os.Stdout` | Biến kiểu `*os.File`, thỏa `Writer`, ghi ra terminal |
+| Custom Writer | Kiểu bất kỳ có `Write([]byte) (int, error)` |
+| Interface là contract | Chỉ kiểm tra chữ ký, logic sai vẫn compile được |
+
+# Channels and Go Routines
+
+Channel và go routine là hai công cụ của Go để viết chương trình **đồng thời** (concurrent).
+
+## Bài toán: Status Checker
+
+Viết chương trình kiểm tra một danh sách website có đang hoạt động không bằng cách gửi HTTP request tới từng trang.
+
+```go
+package main
+
+import (
+	"fmt"
+	"net/http"
+)
+
+func main() {
+	links := []string{
+		"http://google.com",
+		"http://facebook.com",
+		"http://stackoverflow.com",
+		"http://golang.org",
+		"http://amazon.com",
+	}
+
+	for _, link := range links {
+		checkLink(link)
+	}
+}
+
+func checkLink(link string) {
+	_, err := http.Get(link)
+	if err != nil {
+		fmt.Println(link, "might be down!")
+		return
+	}
+	fmt.Println(link, "is up!")
+}
+```
+
+- URL phải có cả giao thức (`http://`) vì `http.Get` cần URL đầy đủ.
+- `_` bỏ qua index trong vòng lặp `range`, và bỏ qua `resp` vì chỉ cần biết có `err` hay không.
+- `fmt.Println(link, "is up!")` nhận nhiều đối số nên không cần nối chuỗi.
+
+## Vấn đề: chạy tuần tự (serial)
+
+- Kết quả in ra **đúng thứ tự** trong slice, giữa mỗi dòng có một khoảng trễ.
+- `http.Get` là **lệnh chặn (blocking call)**: chương trình đứng chờ response rồi mới sang link tiếp theo.
+- Nếu có hàng nghìn link, mỗi link chỉ được kiểm tra lại sau khi chạy hết cả danh sách.
+- Giải pháp: gửi **tất cả request cùng lúc**, response nào về trước thì in trước.
+
+```
+Tuần tự:  google ──chờ──► facebook ──chờ──► stackoverflow ──chờ──► ...
+Đồng thời: google ─┐
+           facebook ─┤ (gửi cùng lúc, in kết quả khi có response)
+           stackoverflow ─┘
+```
+
+## Go Routine
+
+- Khi chạy chương trình, Go tự tạo **một go routine chính (main routine)**, thực thi code từng dòng.
+- Thêm từ khóa `go` trước lời gọi hàm để chạy hàm đó trong **một go routine mới**:
+
+```go
+for _, link := range links {
+	go checkLink(link)
+}
+```
+
+- Khi go routine con gặp lệnh chặn (`http.Get`), quyền điều khiển trả về main routine để nó tiếp tục vòng lặp và tạo go routine tiếp theo.
+- `go` luôn đặt **trước một lời gọi hàm**.
+
+## Go Scheduler
+
+- **Go Scheduler** quyết định go routine nào được chạy.
+- Với **một lõi CPU**: dù có nhiều go routine, tại một thời điểm chỉ **một** go routine chạy. Scheduler chuyển qua lại rất nhanh khi routine kết thúc hoặc gặp lệnh chặn.
+- Với **nhiều lõi CPU**: mỗi lõi chạy một go routine, nên nhiều đoạn code chạy **thực sự cùng lúc**.
+
+## Concurrency is not Parallelism
+
+| | Concurrency (đồng thời) | Parallelism (song song) |
+|---|---|---|
+| Ý nghĩa | Có nhiều go routine, lên lịch xen kẽ nhau | Nhiều việc chạy **đúng cùng một thời điểm** |
+| Cần gì | Chỉ cần 1 lõi CPU | Cần nhiều lõi CPU vật lý |
+| Ví dụ | 1 lõi chuyển qua lại giữa các routine | Lõi 1 chạy routine A, lõi 2 chạy routine B cùng lúc |
+
+## Main routine và Child routine
+
+- **Main routine**: tạo tự động khi chạy chương trình, thực thi `main`.
+- **Child routine**: các routine tạo bằng từ khóa `go`.
+- Hai loại này **không ngang hàng nhau**. Điểm khác biệt này gây ra lỗi ngay khi bắt đầu dùng go routine (sẽ tìm hiểu ở phần tiếp theo).
+
+### Tóm tắt
+
+| Khái niệm | Ý nghĩa |
+|---|---|
+| Blocking call | Lệnh mất thời gian, routine phải đứng chờ (vd `http.Get`) |
+| Go routine | Một "động cơ" thực thi code của một hàm |
+| `go f()` | Chạy `f` trong một go routine mới |
+| Go Scheduler | Chọn routine nào chạy, chuyển đổi khi gặp lệnh chặn |
+| Concurrency | Nhiều routine xen kẽ, có thể chỉ trên 1 lõi |
+| Parallelism | Nhiều routine chạy cùng lúc trên nhiều lõi |
+| Main vs child routine | Main tạo tự động, child tạo bằng `go`, không ngang hàng |
+
+## Lỗi: main routine thoát sớm
+
+- Chỉ thêm `go checkLink(link)` rồi chạy: **không có gì được in ra**.
+- Lý do: **chỉ main routine quyết định khi nào chương trình kết thúc**.
+- Main routine tạo xong các child routine, hết vòng `for`, không còn code để chạy, nên thoát luôn. Nó **không chờ** các child routine đang `http.Get`.
+- Khi main routine thoát, toàn bộ chương trình dừng và các child routine bị hủy giữa chừng.
+
+```
+main:   tạo G1, G2, G3, G4, G5 ──► hết code ──► THOÁT
+G1..G5: đang chờ http.Get ...          ✗ bị hủy
+```
+
+## Channel
+
+- **Channel** là cách **duy nhất** để các go routine giao tiếp với nhau.
+- Hình dung như tin nhắn: một routine gửi dữ liệu vào channel, routine khác có channel đó sẽ nhận được.
+- Channel là một giá trị như mọi giá trị khác (struct, slice, int...), có thể truyền đi khắp chương trình.
+- Channel **có kiểu**: `chan string` chỉ gửi/nhận được `string`. Gửi kiểu khác (vd `float64`) sẽ báo lỗi kiểu.
+
+### Tạo và truyền channel
+
+```go
+c := make(chan string)
+
+for _, link := range links {
+	go checkLink(link, c)
+}
+```
+
+- Biến `c` tuân theo quy tắc phạm vi bình thường: chỉ dùng được trong `main`, nên phải **truyền vào hàm** làm đối số.
+- Tham số của hàm cũng phải khai báo kiểu dữ liệu của channel:
+
+```go
+func checkLink(link string, c chan string) { ... }
+```
+
+### Cú pháp gửi và nhận
+
+| Cú pháp | Ý nghĩa |
+|---|---|
+| `channel <- 5` | Gửi giá trị `5` vào channel |
+| `myNumber <- channel` | Chờ nhận một giá trị từ channel rồi gán vào `myNumber` |
+| `fmt.Println(<-channel)` | Chờ nhận một giá trị rồi truyền thẳng vào hàm |
+
+> Lưu ý: cú pháp gán đầy đủ trong Go là `myNumber := <-channel`.
+
+### Áp dụng vào checkLink
+
+```go
+func main() {
+	// ...
+	c := make(chan string)
+
+	for _, link := range links {
+		go checkLink(link, c)
+	}
+
+	fmt.Println(<-c)
+}
+
+func checkLink(link string, c chan string) {
+	_, err := http.Get(link)
+	if err != nil {
+		fmt.Println(link, "might be down!")
+		c <- "Might be down I think"
+		return
+	}
+	fmt.Println(link, "is up!")
+	c <- "Yep its up"
+}
+```
+
+- Kết quả: chỉ in ra **một** link (link phản hồi nhanh nhất) cùng một tin nhắn từ channel, rồi chương trình thoát.
+
+## Nhận từ channel là lệnh chặn
+
+- `<-c` là một **lệnh chặn (blocking call)**, giống `http.Get`. Main routine bị tạm dừng cho đến khi có tin nhắn gửi vào channel.
+- Diễn biến:
+  1. Main routine tạo hết các child routine rồi dừng ở `<-c` để chờ.
+  2. Routine nào có response trước (vd google) sẽ gửi tin nhắn vào `c`.
+  3. Main routine thức dậy, nhận tin nhắn, in ra.
+  4. Không còn code để chạy, nên main routine thoát. Các routine còn lại bị bỏ dở.
+
+```
+main:   tạo G1..G5 ──► chờ <-c ......... nhận ──► in ──► THOÁT
+G1 (google):  http.Get ......... c <- "..." ┘
+G2..G5:       http.Get ........................ ✗ bị hủy
+```
+
+### Thử nghiệm: nhiều lệnh nhận
+
+- Viết `fmt.Println(<-c)` **2 lần**: nhận 2 tin nhắn rồi thoát.
+- Viết **5 lần** (bằng số link): nhận đủ 5 tin nhắn, mọi routine đều xong.
+- Viết **6 lần** (nhiều hơn số link): in 5 tin nhắn rồi chương trình **bị treo**, vì main routine chờ mãi tin nhắn thứ 6 không bao giờ tới.
+- Kết luận: số lần nhận phải khớp với số tin nhắn được gửi. Viết lặp lại nhiều `Println` cũng không thực tế khi có nhiều link (cách giải quyết ở phần tiếp theo).
+
+### Tóm tắt
+
+| Khái niệm | Ý nghĩa |
+|---|---|
+| Main routine thoát sớm | Chương trình kết thúc khi main hết code, không chờ child routine |
+| Channel | Kênh giao tiếp duy nhất giữa các go routine |
+| `make(chan string)` | Tạo channel chỉ truyền giá trị kiểu `string` |
+| `c chan string` | Khai báo tham số kiểu channel trong hàm |
+| `c <- v` | Gửi `v` vào channel |
+| `v := <-c` / `f(<-c)` | Chờ nhận giá trị từ channel |
+| Nhận là lệnh chặn | Routine dừng ở `<-c` cho đến khi có tin nhắn |
+| Nhận nhiều hơn số gửi | Chương trình bị treo vì chờ mãi |
+
+## Nhận tin nhắn bằng vòng lặp for
+
+- Thay vì viết lặp lại nhiều dòng `fmt.Println(<-c)`, dùng vòng lặp `for` kiểu C (không dùng `range`), lặp đúng bằng số link:
+
+```go
+for i := 0; i < len(links); i++ {
+	fmt.Println(<-c)
+}
+```
+
+- Vòng lặp **không chạy hết ngay lập tức**: mỗi vòng dừng ở `<-c` cho đến khi có tin nhắn rồi mới sang vòng tiếp theo.
+- Nhận đủ `len(links)` tin nhắn thì main routine hết code và chương trình thoát.
+
+## Kiểm tra link liên tục (lặp vô hạn)
+
+- Yêu cầu mới: kiểm tra mỗi link **liên tục**, giống một trình theo dõi trạng thái. Routine của link nào xong thì tạo ngay routine mới để kiểm tra lại link đó.
+- Cách làm: gửi **chính link** vào channel thay vì một chuỗi cố định, main routine nhận link đó và tạo routine mới.
+
+```go
+func main() {
+	// ...
+	c := make(chan string)
+
+	for _, link := range links {
+		go checkLink(link, c)
+	}
+
+	for {
+		go checkLink(<-c, c)
+	}
+}
+
+func checkLink(link string, c chan string) {
+	_, err := http.Get(link)
+	if err != nil {
+		fmt.Println(link, "might be down!")
+		c <- link
+		return
+	}
+	fmt.Println(link, "is up!")
+	c <- link
+}
+```
+
+- `for { }` là **vòng lặp vô hạn**. Nó không quay hàng triệu lần mỗi giây vì `<-c` vẫn là lệnh chặn: chỉ lặp khi nhận được một link.
+- `<-c` dùng được làm đối số `string`, vì Go biết channel `chan string` sẽ trả về một `string`.
+- Tại mọi thời điểm chỉ có khoảng `len(links)` request đang chạy.
+- Vấn đề: các trang bị gọi liên tục, quá nhanh. Nên có một khoảng dừng giữa các lần kiểm tra.
+
+## Cú pháp range với channel
+
+- Viết lại vòng lặp vô hạn cho dễ đọc hơn. Hai cách viết dưới đây **tương đương nhau**:
+
+```go
+for {
+	go checkLink(<-c, c)
+}
+
+for l := range c {
+	go checkLink(l, c)
+}
+```
+
+- `for l := range c`: chờ channel trả về một giá trị, gán vào `l`, chạy thân vòng lặp, rồi lại chờ giá trị tiếp theo.
+- Người đọc code thấy ngay mục đích: "chạy thân vòng lặp mỗi khi channel có giá trị mới".
+
+## Tạm dừng với time.Sleep
+
+- Gói `time` có hàm `time.Sleep(d Duration)`: tạm dừng **go routine hiện tại** ít nhất một khoảng `d`.
+- `time.Second` là hằng số kiểu `Duration` (1 giây). `Duration` thực chất là `int64` nên có thể nhân lên:
+
+```go
+time.Sleep(5 * time.Second) // dừng 5 giây
+```
+
+### Đặt Sleep ở đâu?
+
+| Vị trí | Vấn đề |
+|---|---|
+| Trong main routine (thân `for l := range c`) | Main bị chặn 5 giây mỗi vòng, không nhận được tin nhắn khác. Tin nhắn bị dồn lại trong channel, tối đa chỉ tạo **1 routine mỗi 5 giây** |
+| Đầu hàm `checkLink` | Chạy được, nhưng lần kiểm tra đầu tiên cũng bị chờ 5 giây. `checkLink` nên kiểm tra **ngay**, không nên tự dừng |
+| Trong một function literal chạy bằng `go` | Đúng: main luôn sẵn sàng nhận tin nhắn, `checkLink` vẫn làm đúng một việc |
+
+## Function literal
+
+- **Function literal** là hàm không có tên, giống *anonymous function* trong JavaScript hay *lambda* trong Python, C#, Ruby.
+- Dùng để bọc một đoạn code nhỏ rồi chạy nó trong một go routine:
+
+```go
+for l := range c {
+	go func() {
+		time.Sleep(5 * time.Second)
+		checkLink(l, c)
+	}()
+}
+```
+
+- Cặp `()` ở cuối dùng để **gọi** function literal. Từ khóa `go` luôn cần một **lời gọi hàm** phía sau.
+- Editor hiện cảnh báo: *loop variable l captured by func literal*.
+
+## Lỗi: biến được capture bởi function literal
+
+- Khi chạy: 5 lần kiểm tra đầu đúng, nhưng sau 5 giây, các lần sau **đều là cùng một link** (vd toàn `facebook.com`).
+- Nguyên nhân: function literal tham chiếu tới biến `l` ở **phạm vi bên ngoài**. Main routine và các child routine cùng trỏ tới **một địa chỉ bộ nhớ**.
+- Main routine liên tục gán giá trị mới cho `l` mỗi khi nhận từ channel. Đến lúc child routine thức dậy sau 5 giây, `l` đã bị đổi sang link khác.
+
+```
+Sai (dùng chung biến):          Đúng (truyền đối số):
+main  ──► l ──► [0xA0] "fb"      main  ──► l ──► [0xA0] "fb"
+child ──► l ──┘                  child ──► link ──► [0xB0] "google" (bản sao)
+```
+
+### Cách sửa: truyền vào làm đối số
+
+- Go là ngôn ngữ **pass by value**: truyền đối số vào hàm sẽ **tạo một bản sao** trong bộ nhớ, nên child routine có giá trị riêng, ổn định.
+
+```go
+for l := range c {
+	go func(link string) {
+		time.Sleep(5 * time.Second)
+		checkLink(link, c)
+	}(l)
+}
+```
+
+- `(l)` ở cuối: gọi function literal và truyền `l` vào. Tham số đặt tên là `link` để khỏi nhầm với `l` bên ngoài.
+- Sau khi sửa: mỗi lần kiểm tra là một link khác nhau, và theo thời gian các lần kiểm tra lệch nhau dần.
+
+> Lưu ý: từ **Go 1.22**, mỗi vòng lặp `for` tạo một biến mới, nên lỗi này không còn xảy ra với biến vòng lặp nữa. Tuy vậy, truyền dữ liệu qua đối số vẫn là cách rõ ràng và an toàn hơn.
+
+### Nguyên tắc
+
+- **Không bao giờ** truy cập cùng một biến từ nhiều go routine khác nhau.
+- Chỉ chia sẻ dữ liệu với child routine bằng cách **truyền đối số** hoặc **giao tiếp qua channel**.
+
+### Tóm tắt
+
+| Khái niệm | Ý nghĩa |
+|---|---|
+| `for i := 0; i < n; i++` | Vòng lặp kiểu C, dùng để nhận đúng `n` tin nhắn |
+| `for { }` | Vòng lặp vô hạn |
+| `go checkLink(<-c, c)` | Nhận link từ channel rồi kiểm tra lại link đó |
+| `for l := range c` | Lặp mỗi khi channel có giá trị mới |
+| `time.Sleep(5 * time.Second)` | Tạm dừng go routine hiện tại 5 giây |
+| Sleep trong main routine | Sai: main bị chặn, không nhận được tin nhắn |
+| Function literal | Hàm không tên: `func(...) { ... }(...)` |
+| Capture biến bên ngoài | Nhiều routine dùng chung biến, giá trị bị thay đổi |
+| Truyền đối số | Tạo bản sao, mỗi routine có giá trị riêng |
