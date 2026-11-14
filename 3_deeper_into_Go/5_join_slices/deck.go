@@ -1,8 +1,15 @@
+// CHỦ ĐỀ: NỐI CÁC PHẦN TỬ SLICE THÀNH MỘT CHUỖI (strings.Join)
+// Quy ước comment:
+//   - Comment VIẾT HOA, bắt đầu bằng ">>>": cú pháp thuộc chủ đề của bài này.
+//   - Comment chữ thường: giải thích chung.
+
 package main
 
+// import (...) dạng nhóm: import nhiều package cùng lúc.
 import (
-	"fmt"     // In dữ liệu ra màn hình
-	"strings" // Các hàm xử lý chuỗi (Join, Split, ...)
+	"fmt" // In dữ liệu ra màn hình
+	// >>> PACKAGE strings CHỨA CÁC HÀM XỬ LÝ CHUỖI: Join, Split, Contains...
+	"strings"
 )
 
 // deck là kiểu tự định nghĩa, bên dưới là một slice chuỗi ([]string).
@@ -42,18 +49,18 @@ func (d deck) print() {
 //   - phần 1: handSize lá đầu tiên (bài trên tay)
 //   - phần 2: các lá còn lại
 //
-// Cú pháp slice d[a:b] lấy phần tử từ chỉ số a đến b-1.
 // d[:handSize] tương đương d[0:handSize]; d[handSize:] lấy từ handSize đến hết.
 // Lưu ý: nếu handSize > len(d) thì chương trình sẽ panic.
 func deal(d deck, handSize int) (deck, deck) {
 	return d[:handSize], d[handSize:]
 }
 
-// toString chuyển bộ bài thành một chuỗi duy nhất, các lá cách nhau bởi dấu phẩy.
-// Ví dụ: "Ace of Spades,Two of Spades,..."
-//
-// []string(d) chuyển kiểu deck về []string, đúng kiểu tham số mà strings.Join cần.
-// Chuỗi này hữu ích khi muốn lưu bộ bài ra file (chuyển tiếp sang []byte).
+// >>> func (d deck) toString() string: METHOD CỦA deck, TRẢ VỀ MỘT CHUỖI DUY NHẤT.
+// >>> VÍ DỤ KẾT QUẢ: "Ace of Spades,Two of Spades,..."
+// Chuỗi này hữu ích khi muốn lưu bộ bài ra file (bài sau chuyển tiếp sang []byte).
 func (d deck) toString() string {
+	// >>> []string(d): ÉP KIỂU (TYPE CONVERSION) TỪ deck VỀ []string.
+	// >>> CÚ PHÁP ÉP KIỂU TRONG GO: KiểuMới(giá_trị).
+	// >>> strings.Join(slice, sep): NỐI MỌI PHẦN TỬ CỦA slice THÀNH 1 CHUỖI, XEN GIỮA LÀ sep (Ở ĐÂY LÀ ",").
 	return strings.Join([]string(d), ",")
 }
